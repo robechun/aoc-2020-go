@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"strings"
 	"strconv"
+	"regexp"
 )
 
 func main() {
@@ -52,7 +53,7 @@ func blah(scanner *bufio.Scanner, properties map[string]string) {
 			break
 		}
 	}
-} 
+}
 
 func validPassport(properties map[string]string) bool {
 	var requiredKeys = [7]string{ "byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid" }
@@ -61,13 +62,13 @@ func validPassport(properties map[string]string) bool {
 		if v, ok := properties[key]; !ok {
 			return false
 		} else {
-			switch v {
+			switch key {
 			case "byr":
 				byr, err := strconv.Atoi(v)
 				if err != nil {
 					return false
 				}
-				if byr < 1920 || byr > 2002 {
+                if !inBetween(byr, 1920, 2002) {
 					return false
 				}
 			case "iyr":
@@ -75,7 +76,7 @@ func validPassport(properties map[string]string) bool {
 				if err != nil {
 					return false
 				}
-				if iyr < 2010 || iyr > 2020 {
+                if !inBetween(iyr, 2010, 2020) {
 					return false
 				}
 			case "eyr":
@@ -83,29 +84,49 @@ func validPassport(properties map[string]string) bool {
 				if err != nil {
 					return false
 				}
-				if eyr < 2020 || eyr > 2030 {
+                if !inBetween(eyr, 2020, 2030) {
 					return false
 				}
 			case "hgt":
-				// todo regex
+                matched, err := regexp.MatchString(`^[0-9]*(cm|in)$`, v)
+                if !matched || err != nil {
+                    return false
+                }
+
+                hgt, _ := strconv.Atoi(v[0:len(v)-2])
+                if strings.Contains(v, "cm") && !inBetween(hgt, 150, 193) {
+                    return false
+                }
+
+                if strings.Contains(v, "in") && !inBetween(hgt, 59, 76) {
+                    return false
+                }
 			case "hcl":
-				// todo regex
+                matched, err := regexp.MatchString(`^#[a-z0-9]{6}$`, v)
+                if !matched || err != nil {
+                    return false
+                }
 			case "ecl":
-				if v != "amb" || v != "blu" || v != "brn" || v != "gry" || v != "grn" || v != "hzl" || v != "oth" {
+				if v != "amb" && v != "blu" && v != "brn" && v != "gry" && v != "grn" && v != "hzl" && v != "oth" {
 					return false
 				}
 			case "pid":
-				if len(v) != 9 {
-					return false
-				}
+                matched, err := regexp.MatchString(`^[0-9]{9}$`, v)
+                if !matched || err != nil {
+                    return false
+                }
 			default:
-				return true
+                continue
 			}
 
 		}
 	}
 
 	return true
+}
+
+func inBetween(v, lower, upper int) bool {
+    return v >= lower && v <= upper
 }
 
 func fillProperties(mappedProperties map[string]string, properties []string) {
