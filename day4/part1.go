@@ -51,7 +51,7 @@ func blah(scanner *bufio.Scanner, properties map[string]string) {
 			break
 		}
 	}
-} 
+}
 
 func validPassport(properties map[string]string) bool {
 	var requiredKeys = [7]string{ "byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid" }
